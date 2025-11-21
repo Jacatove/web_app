@@ -31,12 +31,16 @@ if st.session_state.token is None:
             if not u or not p:
                 st.warning("Please enter both username and password.")
             else:
-                response = auth_service.authenticate_user(u, p)
-                st.session_state.username = u
-                st.session_state.token = response.get('access_token')
-                st.session_state.membership = response.get('membership')
-                st.session_state.is_authenticated = True
-                st.rerun()
+                is_authenticated, details = auth_service.authenticate_user(u, p)
+
+                if is_authenticated:
+                    st.session_state.username = u
+                    st.session_state.token = details.get('access_token')
+                    st.session_state.membership = details.get('membership')
+                    st.session_state.is_authenticated = True
+                    st.rerun()
+                else:
+                    st.warning(details)
 
     with tab_signup:
         with st.form("signup_form"):
@@ -50,7 +54,8 @@ if st.session_state.token is None:
             elif p1 != p2:
                 st.error("Passwords do not match.")
             else:
-                auth_service.signup(email, p1)
+                signup_msg = auth_service.signup(email, p1)
+                st.info(signup_msg)
 
 else:
     st.success(f"Logged in as **{st.session_state.username}**")
@@ -75,7 +80,7 @@ else:
             st.image(buf.getvalue(), caption="Scan this QR in your authenticator app")
 
         with st.form("otp-configurar"):
-            otp_code = int(st.number_input("OTP code", step=1))
+            otp_code = str(int(st.number_input("OTP code", step=1)))
             confirm = st.form_submit_button("Confirmar")
             is_confirm = False
 
