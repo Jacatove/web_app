@@ -5,4 +5,5 @@
 
 streamlit                 # Streamlit lets you transform Python scripts into interactive web apps in minutes, instead of weeks. Build dashboards, generate reports, or create chat apps.
 pydantic
-qrcode   # A standard install uses pypng to generate PNG files and can also render QR codes directly to the console.
+qrcode                    # A standard install uses pypng to generate PNG files and can also render QR codes directly to the console.
+requests                  # Requests is a simple, yet elegant, HTTP library

@@ -6,22 +6,26 @@
 #
 altair==5.5.0
     # via streamlit
+annotated-types==0.7.0
+    # via pydantic
 attrs==25.4.0
     # via
     #   jsonschema
     #   referencing
 blinker==1.9.0
     # via streamlit
-cachetools==6.2.1
+cachetools==6.2.2
     # via streamlit
-certifi==2025.10.5
+certifi==2025.11.12
     # via requests
 charset-normalizer==3.4.4
     # via requests
-click==8.3.0
+click==8.3.1
     # via streamlit
 colorama==0.4.6
-    # via click
+    # via
+    #   click
+    #   qrcode
 gitdb==4.0.12
     # via gitpython
 gitpython==3.1.45
@@ -38,9 +42,9 @@ jsonschema-specifications==2025.9.1
     # via jsonschema
 markupsafe==3.0.3
     # via jinja2
-narwhals==2.10.2
+narwhals==2.12.0
     # via altair
-numpy==2.3.4
+numpy==2.3.5
     # via
     #   pandas
     #   pydeck
@@ -53,23 +57,31 @@ pandas==2.3.3
     # via streamlit
 pillow==12.0.0
     # via streamlit
-protobuf==6.33.0
+protobuf==6.33.1
     # via streamlit
 pyarrow==21.0.0
     # via streamlit
+pydantic==2.12.4
+    # via -r requirements/base.in
+pydantic-core==2.41.5
+    # via pydantic
 pydeck==0.9.1
     # via streamlit
 python-dateutil==2.9.0.post0
     # via pandas
 pytz==2025.2
     # via pandas
+qrcode==8.2
+    # via -r requirements/base.in
 referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
 requests==2.32.5
-    # via streamlit
-rpds-py==0.28.0
+    # via
+    #   -r requirements/base.in
+    #   streamlit
+rpds-py==0.29.0
     # via
     #   jsonschema
     #   referencing
@@ -86,7 +98,13 @@ toml==0.10.2
 tornado==6.5.2
     # via streamlit
 typing-extensions==4.15.0
-    # via streamlit
+    # via
+    #   pydantic
+    #   pydantic-core
+    #   streamlit
+    #   typing-inspection
+typing-inspection==0.4.2
+    # via pydantic
 tzdata==2025.2
     # via pandas
 urllib3==2.5.0
