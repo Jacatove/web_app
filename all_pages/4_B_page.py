@@ -1,9 +1,10 @@
 import streamlit as st
+import plotly.express as px
 import pandas as pd
 from datetime import datetime
 from services.auth_service import AuthService
 
-st.title("Equipo B - Dashboard Financiero")
+st.title("Dashborad Financiero")
 
 # Verificar que el usuario esté autenticado
 if 'is_authenticated' not in st.session_state or not st.session_state.is_authenticated:
@@ -81,11 +82,6 @@ try:
     es_premium = bool(cliente['es_cliente_premium'])
     st.session_state.membership = 'PREMIUM' if es_premium else 'FREE'
     
-    # Mostrar info de sesión
-    st.info(
-        f"Usuario: {email_usuario} | ID: {id_cliente[:8]}... | Membresía: {st.session_state.membership}"
-    )
-    
     # Filtrar datos del cliente
     cliente = clientes_df[clientes_df['id_cliente'] == id_cliente].iloc[0]
     cuentas_cliente = cuentas_df[cuentas_df['id_cliente'] == id_cliente]
@@ -93,22 +89,125 @@ try:
     scoring_cliente = scoring_df[scoring_df['id_cliente'] == id_cliente].iloc[0] if len(scoring_df[scoring_df['id_cliente'] == id_cliente]) > 0 else None
     
     st.divider()
-    
+    # CSS mejorado
+    st.markdown("""
+    <style>
+    /* Centrar y expandir tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 2px;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Hacer que cada tab ocupe más espacio */
+    .stTabs [data-baseweb="tab"] {
+        flex-grow: 1;
+        text-align: center;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    /* Borde inferior para el tab activo */
+    .stTabs [aria-selected="true"] {
+        border-bottom: 3px solid #00bf63;
+    }
+
+    /* Contenedor de tabs con ancho completo */
+    .stTabs {
+        width: 100%;
+    }
+
+    /* Tarjetas mejoradas */
+    .card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .metric-card {
+        text-align: center;
+        border-left: 4px solid #667eea;
+    }
+
+    .metric-card h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .metric-card h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Información del cliente
-    st.header(f"👤 {cliente['nombres']} {cliente['apellidos']}")
-    col1, col2, col3, col4 = st.columns(4)
+    st.markdown(f"## 👤 {cliente['nombres']} {cliente['apellidos']}")
+
+    # Primera fila - 3 tarjetas
+    col1, col2 = st.columns(2)
+
     with col1:
-        st.metric("Cédula", cliente['cedula'])
+        st.markdown(f"""
+        <div class="card metric-card">
+            <h4 style="margin:0; color:#667eea;">📋 Cédula</h4>
+            <h2 style="margin:10px 0 0 0;">{cliente['cedula']}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+
     with col2:
-        st.metric("Ciudad", cliente['ciudad'])
-    with col3:
-        st.metric("Ingresos Mensuales", f"${cliente['ingresos_mensuales']:,.0f}")
-    with col4:
-        # Mostrar score solo para usuarios PREMIUM
-        if st.session_state.membership == 'PREMIUM' and scoring_cliente is not None:
-            st.metric("Score Crediticio", int(scoring_cliente['puntaje_credito']))
-        elif st.session_state.membership == 'FREE':
-            st.metric("Score Crediticio", "🔒 Premium")
+        st.markdown(f"""
+        <div class="card metric-card">
+            <h4 style="margin:0; color:#667eea;">📍 Ciudad</h4>
+            <h2 style="margin:10px 0 0 0;">{cliente['ciudad']}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Segunda fila - Score (si aplica)
+    if st.session_state.membership == 'PREMIUM' and scoring_cliente is not None:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            puntaje = scoring_cliente['puntaje_credito']
+            score_color = (
+                "#00bf63" if puntaje >= 750 else     # Bueno (verde)
+                "#ffc107" if puntaje >= 650 else     # Medio (amarillo)
+                "#f5576c"                             # Malo (rojo)
+            )
+            st.markdown(f"""
+            <div class="card metric-card">
+                <h4 style="margin:0; color:#667eea;">⭐ Score Crediticio</h4>
+                <h2 style="margin:10px 0 0 0; color:{score_color};">{int(scoring_cliente['puntaje_credito'])}</h2>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with col2:
+            st.markdown(f"""
+            <div class="card metric-card">
+                <h4 style="margin:0; color:#667eea;">💰 Ingresos</h4>
+                <h2 style="margin:10px 0 0 0;">${cliente['ingresos_mensuales']:,.0f}</h2>
+            </div>
+            """, unsafe_allow_html=True)
+
+    else:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            <div class="card metric-card" style="opacity:0.6;">
+                <h4 style="margin:0; color:#667eea;">🔒 Score Crediticio</h4>
+                <h2 style="margin:10px 0 0 0;">Premium</h2>
+            </div>
+            """, unsafe_allow_html=True)
     
     st.divider()
     
@@ -271,26 +370,46 @@ try:
         # ========== VERSIÓN PREMIUM ==========
         st.success("⭐ Plan PREMIUM - Acceso completo")
         
-        # Todas las cuentas
         st.markdown("### 💳 Todas tus Cuentas de Débito")
         
         total_saldo = cuentas_cliente['saldo_actual'].sum()
         st.metric("💰 Saldo Total", f"${total_saldo:,.2f}", 
                  delta=f"{len(cuentas_cliente)} cuenta(s) activa(s)")
-        
-        # Mostrar cuentas en columnas
+
+        # Mostrar cuentas en filas de 3
         num_cuentas = len(cuentas_cliente)
-        cols = st.columns(min(num_cuentas, 4))
-        
-        for idx, cuenta in enumerate(cuentas_cliente.iterrows()):
-            _, cuenta_data = cuenta
-            col_idx = idx % 4
-            with cols[col_idx]:
-                st.markdown(f"**{cuenta_data['entidad_financiera']}**")
-                st.write(f"_{cuenta_data['tipo_cuenta']}_")
-                st.metric("Saldo", f"${cuenta_data['saldo_actual']:,.0f}")
-                st.caption(f"Cuenta: ****{str(cuenta_data['numero_cuenta'])[-4:]}")
-                st.caption(f"Estado: {cuenta_data['estado']}")
+
+        for i in range(0, num_cuentas, 3):
+            cols = st.columns(3)
+            
+            for j in range(3):
+                idx = i + j
+                if idx < num_cuentas:
+                    cuenta_data = cuentas_cliente.iloc[idx]
+                    
+                    # Color según el estado
+                    estado_color = "#00bf63" if cuenta_data['estado'] == 'Activa' else "#f5576c"
+                    
+                    with cols[j]:
+                        st.markdown(f"""
+                        <div class="card metric-card">
+                            <h4 style="margin:0; color:#667eea; font-size:1.1rem;">
+                                🏦 {cuenta_data['entidad_financiera']}
+                            </h4>
+                            <p style="margin:8px 0; color:#888; font-size:0.9rem;">
+                                {cuenta_data['tipo_cuenta']}
+                            </p>
+                            <h2 style="margin:10px 0; color:#333;">
+                                ${cuenta_data['saldo_actual']:,.0f}
+                            </h2>
+                            <p style="margin:8px 0; color:#666; font-size:0.85rem;">
+                                Cuenta: ****{str(cuenta_data['numero_cuenta'])[-4:]}
+                            </p>
+                            <p style="margin:5px 0 0 0; color:{estado_color}; font-weight:600; font-size:0.9rem;">
+                                ● {cuenta_data['estado']}
+                            </p>
+                        </div>
+                        """, unsafe_allow_html=True)
         
         st.divider()
         
@@ -367,7 +486,7 @@ try:
             
             # Tabla de movimientos
             for idx, mov in historial_filtrado.head(10).iterrows():
-                color = "🔴" if mov['tipo_operacion'] == 'Debito' else "🟢"
+                color = "🔴" if mov['tipo_operacion'] == 'Debito' else "🟡"
                 monto = mov['pago_realizado'] if pd.notna(mov['pago_realizado']) else 0
                 categoria = mov['categoria_gasto'] if pd.notna(mov['categoria_gasto']) else 'Sin categoría'
                 
@@ -401,41 +520,118 @@ try:
         
         st.divider()
         
-        # Análisis premium
+        # Análisis premium con gráficos
         st.markdown("### 📈 Análisis Financiero PREMIUM")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.write("**Gastos por Categoría:**")
+
+        tab1, tab2, tab3 = st.tabs(["📊 Por Categoría", "💳 Por Entidad", "📈 Tendencias"])
+
+        with tab1:
+            st.write("**Distribución de Gastos por Categoría**")
             gastos_categoria = historial_cliente[
                 (historial_cliente['tipo_operacion'] == 'Debito') & 
                 (pd.notna(historial_cliente['categoria_gasto']))
             ].groupby('categoria_gasto')['pago_realizado'].sum().sort_values(ascending=False)
             
             if len(gastos_categoria) > 0:
-                for cat, monto in gastos_categoria.items():
-                    st.write(f"• {cat}: ${monto:,.0f}")
+                # Gráfico de torta
+                fig_gastos = px.pie(
+                    values=gastos_categoria.values,
+                    names=gastos_categoria.index,
+                    title='',
+                    hole=0.4
+                )
+                fig_gastos.update_traces(textposition='inside', textinfo='percent+label')
+                fig_gastos.update_layout(
+                    height=400,
+                    showlegend=True,
+                    margin=dict(t=0, b=0, l=0, r=0)
+                )
+                st.plotly_chart(fig_gastos, use_container_width=True)
+                
+                # Menú desplegable con desglose
+                with st.expander("📋 Ver detalle de gastos por categoría"):
+                    total_gastos = gastos_categoria.sum()
+                    for cat, monto in gastos_categoria.items():
+                        porcentaje = (monto / total_gastos * 100)
+                        st.markdown(f"""
+                        <div class="card" style="padding:10px; margin-bottom:8px;">
+                            <strong>{cat}</strong><br>
+                            ${monto:,.0f} ({porcentaje:.1f}%)
+                        </div>
+                        """, unsafe_allow_html=True)
             else:
-                st.write("Sin datos de gastos")
+                st.info("Sin datos de gastos para mostrar")
+
+        with tab2:
+            st.write("**Distribución de Saldos por Entidad Financiera**")
+            
+            if len(cuentas_cliente) > 0:
+                # Gráfico de torta
+                fig_saldos = px.pie(
+                    values=cuentas_cliente['saldo_actual'],
+                    names=cuentas_cliente['entidad_financiera'],
+                    title='',
+                    hole=0.4
+                )
+                fig_saldos.update_traces(textposition='inside', textinfo='percent+label')
+                fig_saldos.update_layout(
+                    height=400,
+                    showlegend=True,
+                    margin=dict(t=0, b=0, l=0, r=0)
+                )
+                st.plotly_chart(fig_saldos, use_container_width=True)
+                
+                # Menú desplegable con resumen
+                with st.expander("🏦 Ver detalle de saldos por banco"):
+                    for idx, cuenta in cuentas_cliente.iterrows():
+                        porcentaje = (cuenta['saldo_actual'] / total_saldo * 100) if total_saldo > 0 else 0
+                        st.markdown(f"""
+                        <div class="card" style="padding:10px; margin-bottom:8px;">
+                            <strong>{cuenta['entidad_financiera']}</strong><br>
+                            ${cuenta['saldo_actual']:,.0f} ({porcentaje:.1f}%)
+                        </div>
+                        """, unsafe_allow_html=True)
+            else:
+                st.info("Sin cuentas registradas")
+
+        with tab3:
+            st.write("*Métricas Financieras*")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                balance = cliente['ingresos_mensuales'] - cliente['gastos_mensuales']
+                st.markdown(f"""
+                <div class="card metric-card">
+                    <h4 style="margin:0; color:#667eea;">Balance Mensual</h4>
+                    <h2 style="margin:10px 0 0 0; color:{'#00bf63' if balance > 0 else '#f5576c'};">
+                        ${balance:,.0f}
+                    </h2>
+                    <p style="margin:5px 0 0 0;">{'✅ Superávit' if balance > 0 else '⚠ Déficit'}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                capacidad_ahorro = (balance / cliente['ingresos_mensuales'] * 100) if cliente['ingresos_mensuales'] > 0 else 0
+                st.markdown(f"""
+                <div class="card metric-card">
+                    <h4 style="margin:0; color:#667eea;">Capacidad Ahorro</h4>
+                    <h2 style="margin:10px 0 0 0;">{capacidad_ahorro:.1f}%</h2>
+                    <p style="margin:5px 0 0 0;">de los ingresos</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                st.markdown(f"""
+                <div class="card metric-card">
+                    <h4 style="margin:0; color:#667eea;">Perfil Familiar</h4>
+                    <h2 style="margin:10px 0 0 0;">{int(cliente['personas_a_cargo'])}</h2>
+                    <p style="margin:5px 0 0 0;">personas | Estrato {int(cliente['estrato_socioeconomico'])}</p>
+                </div>
+                """, unsafe_allow_html=True)
         
-        with col2:
-            st.write("**Distribución de Saldos:**")
-            for idx, cuenta in cuentas_cliente.iterrows():
-                porcentaje = (cuenta['saldo_actual'] / total_saldo * 100) if total_saldo > 0 else 0
-                st.write(f"• {cuenta['entidad_financiera']}: {porcentaje:.1f}%")
-        
-        with col3:
-            balance = cliente['ingresos_mensuales'] - cliente['gastos_mensuales']
-            st.metric("Balance Mensual", f"${balance:,.0f}", 
-                     delta="Positivo" if balance > 0 else "Negativo")
-            capacidad_ahorro = (balance / cliente['ingresos_mensuales'] * 100) if cliente['ingresos_mensuales'] > 0 else 0
-            st.write(f"**Capacidad de ahorro:** {capacidad_ahorro:.1f}%")
-            st.write(f"**Personas a cargo:** {int(cliente['personas_a_cargo'])}")
-            st.write(f"**Estrato:** {int(cliente['estrato_socioeconomico'])}")
-    
     st.divider()
-    st.caption("© 2024 Equipo B - Sistema de Gestión Financiera")
+    st.caption("© 2025 Equipo B - Sistema de Gestión Financiera")
 
 except FileNotFoundError as e:
     st.error(f"❌ Error al cargar los datos: {e}")
