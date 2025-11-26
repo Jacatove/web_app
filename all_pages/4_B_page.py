@@ -4,15 +4,15 @@ import pandas as pd
 from datetime import datetime
 from services.auth_service import AuthService
 
-st.title("Dashborad Financiero")
+st.title("Dashboard Financiero")
 
 # Verificar que el usuario esté autenticado
 if 'is_authenticated' not in st.session_state or not st.session_state.is_authenticated:
-    st.error("❌ No estás autenticado. Por favor inicia sesión.")
+    st.error("No estás autenticado. Por favor inicia sesión.")
     st.stop()
 
 if 'token' not in st.session_state or not st.session_state.token:
-    st.error("❌ Token no encontrado. Por favor inicia sesión.")
+    st.error("Token no encontrado. Por favor inicia sesión.")
     st.stop()
 
 # Cargar datos desde CSV
@@ -61,7 +61,7 @@ try:
     id_usuario = extraer_uuid_del_whoami(llamada_whoiam)
     
     if not id_usuario:
-        st.error("❌ No se pudo extraer el ID del usuario del mensaje whoami.")
+        st.error("No se pudo extraer el ID del usuario del mensaje whoami.")
         st.info("Respuesta whoami recibida: " + str(llamada_whoiam))
         st.stop()
     
@@ -69,8 +69,8 @@ try:
     cliente_match = clientes_df[clientes_df['id_cliente'] == id_usuario]
     
     if len(cliente_match) == 0:
-        st.error(f"❌ No se encontró información financiera para el usuario ID: {id_usuario}")
-        st.info("💡 Contacta a soporte para registrar tus datos financieros.")
+        st.error(f"No se encontró información financiera para el usuario ID: {id_usuario}")
+        st.info("Contacta a soporte para registrar tus datos financieros.")
         st.stop()
     
     # Obtener datos del cliente
@@ -151,7 +151,7 @@ try:
     """, unsafe_allow_html=True)
 
     # Información del cliente
-    st.markdown(f"## 👤 {cliente['nombres']} {cliente['apellidos']}")
+    st.markdown(f"## {cliente['nombres']} {cliente['apellidos']}")
 
     # Primera fila - 3 tarjetas
     col1, col2 = st.columns(2)
@@ -159,7 +159,7 @@ try:
     with col1:
         st.markdown(f"""
         <div class="card metric-card">
-            <h4 style="margin:0; color:#667eea;">📋 Cédula</h4>
+            <h4 style="margin:0; color:#667eea;">Cédula</h4>
             <h2 style="margin:10px 0 0 0;">{cliente['cedula']}</h2>
         </div>
         """, unsafe_allow_html=True)
@@ -167,7 +167,7 @@ try:
     with col2:
         st.markdown(f"""
         <div class="card metric-card">
-            <h4 style="margin:0; color:#667eea;">📍 Ciudad</h4>
+            <h4 style="margin:0; color:#667eea;">Ciudad</h4>
             <h2 style="margin:10px 0 0 0;">{cliente['ciudad']}</h2>
         </div>
         """, unsafe_allow_html=True)
@@ -185,7 +185,7 @@ try:
             )
             st.markdown(f"""
             <div class="card metric-card">
-                <h4 style="margin:0; color:#667eea;">⭐ Score Crediticio</h4>
+                <h4 style="margin:0; color:#667eea;">Score Crediticio</h4>
                 <h2 style="margin:10px 0 0 0; color:{score_color};">{int(scoring_cliente['puntaje_credito'])}</h2>
             </div>
             """, unsafe_allow_html=True)
@@ -193,7 +193,7 @@ try:
         with col2:
             st.markdown(f"""
             <div class="card metric-card">
-                <h4 style="margin:0; color:#667eea;">💰 Ingresos</h4>
+                <h4 style="margin:0; color:#667eea;">Ingresos</h4>
                 <h2 style="margin:10px 0 0 0;">${cliente['ingresos_mensuales']:,.0f}</h2>
             </div>
             """, unsafe_allow_html=True)
@@ -204,7 +204,7 @@ try:
         with col1:
             st.markdown("""
             <div class="card metric-card" style="opacity:0.6;">
-                <h4 style="margin:0; color:#667eea;">🔒 Score Crediticio</h4>
+                <h4 style="margin:0; color:#667eea;">Score Crediticio</h4>
                 <h2 style="margin:10px 0 0 0;">Premium</h2>
             </div>
             """, unsafe_allow_html=True)
@@ -214,10 +214,10 @@ try:
     # VISUALIZACIÓN SEGÚN MEMBRESÍA
     if st.session_state.membership == 'FREE':
         # ========== VERSIÓN FREE ==========
-        st.warning("⚠️ Plan FREE - Acceso limitado")
+        st.warning("Plan FREE - Acceso limitado")
         
         # Mostrar cuentas limitadas (máximo 2)
-        st.markdown("### 💳 Cuentas de Débito")
+        st.markdown("### Cuentas de Débito")
         cuentas_limitadas = cuentas_cliente.head(2)
         total_cuentas = len(cuentas_cliente)
         
@@ -225,9 +225,9 @@ try:
         saldo_visible = cuentas_limitadas['saldo_actual'].sum()
         col1, col2 = st.columns(2)
         with col1:
-            st.metric("💰 Saldo Visible", f"${saldo_visible:,.0f}")
+            st.metric("Saldo Visible", f"${saldo_visible:,.0f}")
         with col2:
-            st.metric("📊 Cuentas Visibles", f"{len(cuentas_limitadas)} de {total_cuentas}")
+            st.metric("Cuentas Visibles", f"{len(cuentas_limitadas)} de {total_cuentas}")
         
         st.divider()
         
@@ -236,7 +236,7 @@ try:
             with st.container():
                 col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
                 with col1:
-                    st.markdown(f"**🏦 {cuenta['entidad_financiera']}**")
+                    st.markdown(f"**{cuenta['entidad_financiera']}**")
                     st.caption(f"_{cuenta['tipo_cuenta']}_")
                 with col2:
                     st.write(f"**${cuenta['saldo_actual']:,.0f}**")
@@ -245,8 +245,7 @@ try:
                     st.write(f"****{str(cuenta['numero_cuenta'])[-4:]}")
                     st.caption("Número")
                 with col4:
-                    estado_emoji = "✅" if cuenta['estado'] == "Activa" else "⚠️"
-                    st.write(f"{estado_emoji} {cuenta['estado']}")
+                    st.write(f"{cuenta['estado']}")
                 st.divider()
         
         # Si tiene más de 2 cuentas, mostrar publicidad
@@ -255,7 +254,7 @@ try:
             st.markdown(f"""
             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                         padding: 25px; border-radius: 10px; color: white; text-align: center;">
-                <h2 style="color: white; margin-bottom: 15px;">🔒 Tienes {total_cuentas - 2} cuenta(s) más bloqueada(s)</h2>
+                <h2 style="color: white; margin-bottom: 15px;">Tienes {total_cuentas - 2} cuenta(s) más bloqueada(s)</h2>
                 <p style="font-size: 18px; margin-bottom: 20px;">
                     Desbloquea todas tus cuentas bancarias con PREMIUM
                 </p>
@@ -266,7 +265,7 @@ try:
         st.divider()
         
         # Score Crediticio BLOQUEADO para FREE
-        st.markdown("### 🔒 Score Crediticio - Solo PREMIUM")
+        st.markdown("### Score Crediticio - Solo PREMIUM")
         
         col1, col2 = st.columns([2, 1])
         with col1:
@@ -275,13 +274,13 @@ try:
                         text-align: center; position: relative; filter: blur(3px); opacity: 0.6;">
                 <h1 style="font-size: 72px; margin: 0;">750</h1>
                 <p style="font-size: 24px; margin: 0;">Muy Bueno</p>
-                <p style="margin-top: 20px;">📈 Tendencia: Mejorando</p>
-                <p>🎯 Percentil: Top 15%</p>
+                <p style="margin-top: 20px;">Tendencia: Mejorando</p>
+                <p>Percentil: Top 15%</p>
             </div>
             """, unsafe_allow_html=True)
             st.markdown("""
             <div style="position: relative; margin-top: -150px; text-align: center; z-index: 100;">
-                <h2>🔒</h2>
+                <h2>Bloqueado</h2>
                 <p style="font-weight: bold; font-size: 18px; color: #667eea;">
                     Contenido Premium Bloqueado
                 </p>
@@ -289,21 +288,21 @@ try:
             """, unsafe_allow_html=True)
         
         with col2:
-            st.warning("**⚠️ Función Bloqueada**")
+            st.warning("**Función Bloqueada**")
             st.markdown("""
             El **Score Crediticio** está disponible solo para usuarios **PREMIUM**.
             
             Con PREMIUM puedes ver:
-            - 📊 Puntaje crediticio actualizado
-            - 📈 Tendencias y predicciones
-            - 💡 Factores de riesgo
-            - 🎯 Recomendaciones personalizadas
+            - Puntaje crediticio actualizado
+            - Tendencias y predicciones
+            - Factores de riesgo
+            - Recomendaciones personalizadas
             """)
         
         st.divider()
         
         # Movimientos limitados
-        st.markdown("### 📊 Últimos Movimientos (Limitado a 5)")
+        st.markdown("### Últimos Movimientos (Limitado a 5)")
         entidades_limitadas = cuentas_limitadas['entidad_financiera'].tolist()
         movimientos_free = historial_cliente[
             historial_cliente['entidad_financiera'].isin(entidades_limitadas)
@@ -328,7 +327,7 @@ try:
         else:
             st.info("No hay movimientos recientes disponibles.")
         
-        st.info("🔒 **Historial limitado.** Actualiza a PREMIUM para ver el historial completo con análisis detallado.")
+        st.info("**Historial limitado.** Actualiza a PREMIUM para ver el historial completo con análisis detallado.")
         
         # CTA de upgrade mejorado
         st.divider()
@@ -336,7 +335,7 @@ try:
         st.markdown("""
         <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
                     padding: 30px; border-radius: 15px; color: white; text-align: center; margin: 20px 0;">
-            <h1 style="color: white; margin-bottom: 10px;">✨ Desbloquea Todo con PREMIUM ✨</h1>
+            <h1 style="color: white; margin-bottom: 10px;">Desbloquea Todo con PREMIUM</h1>
             <p style="font-size: 20px; margin-bottom: 25px;">
                 Accede a todas las funciones y maximiza tu control financiero
             </p>
@@ -346,34 +345,34 @@ try:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("#### 🏦 Todas tus Cuentas")
+            st.markdown("#### Todas tus Cuentas")
             st.write("Visualiza todas tus cuentas bancarias sin límites")
         
         with col2:
-            st.markdown("#### 📊 Score Crediticio")
+            st.markdown("#### Score Crediticio")
             st.write("Conoce tu puntaje y recibe recomendaciones personalizadas")
         
         with col3:
-            st.markdown("#### 📈 Análisis Completo")
+            st.markdown("#### Análisis Completo")
             st.write("Historial detallado y análisis de gastos por categoría")
         
         st.markdown("")
         
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            if st.button("🚀 ACTUALIZAR A PREMIUM AHORA", type="primary", use_container_width=True):
+            if st.button("ACTUALIZAR A PREMIUM AHORA", type="primary", use_container_width=True):
                 st.balloons()
-                st.success("🎉 ¡Gracias por tu interés! Contacta a soporte para actualizar tu plan.")
-                st.info("📧 Email: soporte@dashboard.com | 📞 WhatsApp: +57 300 123 4567")
+                st.success("¡Gracias por tu interés! Contacta a soporte para actualizar tu plan.")
+                st.info("Email: soporte@dashboard.com | WhatsApp: +57 300 123 4567")
     
     else:
         # ========== VERSIÓN PREMIUM ==========
-        st.success("⭐ Plan PREMIUM - Acceso completo")
+        st.success("Plan PREMIUM - Acceso completo")
         
-        st.markdown("### 💳 Todas tus Cuentas de Débito")
+        st.markdown("### Todas tus Cuentas de Débito")
         
         total_saldo = cuentas_cliente['saldo_actual'].sum()
-        st.metric("💰 Saldo Total", f"${total_saldo:,.2f}", 
+        st.metric("Saldo Total", f"${total_saldo:,.2f}", 
                  delta=f"{len(cuentas_cliente)} cuenta(s) activa(s)")
 
         # Mostrar cuentas en filas de 3
@@ -394,7 +393,7 @@ try:
                         st.markdown(f"""
                         <div class="card metric-card">
                             <h4 style="margin:0; color:#667eea; font-size:1.1rem;">
-                                🏦 {cuenta_data['entidad_financiera']}
+                                {cuenta_data['entidad_financiera']}
                             </h4>
                             <p style="margin:8px 0; color:#888; font-size:0.9rem;">
                                 {cuenta_data['tipo_cuenta']}
@@ -406,7 +405,7 @@ try:
                                 Cuenta: ****{str(cuenta_data['numero_cuenta'])[-4:]}
                             </p>
                             <p style="margin:5px 0 0 0; color:{estado_color}; font-weight:600; font-size:0.9rem;">
-                                ● {cuenta_data['estado']}
+                                {cuenta_data['estado']}
                             </p>
                         </div>
                         """, unsafe_allow_html=True)
@@ -415,7 +414,7 @@ try:
         
         # Score Crediticio (solo PREMIUM)
         if scoring_cliente is not None:
-            st.markdown("### 📊 Score Crediticio")
+            st.markdown("### Score Crediticio")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
                 st.metric("Puntaje", int(scoring_cliente['puntaje_credito']), 
@@ -428,7 +427,7 @@ try:
                 st.metric("Percentil Nacional", f"{int(scoring_cliente['percentil_nacional'])}%")
             
             # Detalles del score
-            with st.expander("📈 Ver análisis detallado"):
+            with st.expander("Ver análisis detallado"):
                 col1, col2 = st.columns(2)
                 with col1:
                     st.write(f"**Deuda total:** ${scoring_cliente['deuda_total']:,.0f}")
@@ -442,13 +441,13 @@ try:
                     st.write(f"**Score predicción 6m:** {int(scoring_cliente['score_prediccion_6meses'])}")
                 
                 st.divider()
-                st.write(f"**⚠️ Factor negativo:** {scoring_cliente['principal_factor_negativo']}")
-                st.write(f"**💡 Oportunidad de mejora:** {scoring_cliente['principal_oportunidad_mejora']}")
+                st.write(f"**Factor negativo:** {scoring_cliente['principal_factor_negativo']}")
+                st.write(f"**Oportunidad de mejora:** {scoring_cliente['principal_oportunidad_mejora']}")
         
         st.divider()
         
         # Historial completo de movimientos
-        st.markdown("### 📊 Historial Completo de Movimientos")
+        st.markdown("### Historial Completo de Movimientos")
         
         if len(historial_cliente) > 0:
             col1, col2, col3 = st.columns(3)
@@ -511,7 +510,7 @@ try:
                         st.warning(f"**{mov['titulo_alerta']}**")
                         st.write(mov['mensaje_alerta'])
                         if pd.notna(mov['accion_recomendada']):
-                            st.info(f"💡 **Recomendación:** {mov['accion_recomendada']}")
+                            st.info(f"**Recomendación:** {mov['accion_recomendada']}")
             
             if len(historial_filtrado) > 10:
                 st.info(f"Mostrando 10 de {len(historial_filtrado)} movimientos. Ajusta los filtros para ver más.")
@@ -521,9 +520,9 @@ try:
         st.divider()
         
         # Análisis premium con gráficos
-        st.markdown("### 📈 Análisis Financiero PREMIUM")
+        st.markdown("### Análisis Financiero PREMIUM")
 
-        tab1, tab2, tab3 = st.tabs(["📊 Por Categoría", "💳 Por Entidad", "📈 Tendencias"])
+        tab1, tab2, tab3 = st.tabs(["Por Categoría", "Por Entidad", "Tendencias"])
 
         with tab1:
             st.write("**Distribución de Gastos por Categoría**")
@@ -549,7 +548,7 @@ try:
                 st.plotly_chart(fig_gastos, use_container_width=True)
                 
                 # Menú desplegable con desglose
-                with st.expander("📋 Ver detalle de gastos por categoría"):
+                with st.expander("Ver detalle de gastos por categoría"):
                     total_gastos = gastos_categoria.sum()
                     for cat, monto in gastos_categoria.items():
                         porcentaje = (monto / total_gastos * 100)
@@ -582,7 +581,7 @@ try:
                 st.plotly_chart(fig_saldos, use_container_width=True)
                 
                 # Menú desplegable con resumen
-                with st.expander("🏦 Ver detalle de saldos por banco"):
+                with st.expander("Ver detalle de saldos por banco"):
                     for idx, cuenta in cuentas_cliente.iterrows():
                         porcentaje = (cuenta['saldo_actual'] / total_saldo * 100) if total_saldo > 0 else 0
                         st.markdown(f"""
@@ -607,7 +606,7 @@ try:
                     <h2 style="margin:10px 0 0 0; color:{'#00bf63' if balance > 0 else '#f5576c'};">
                         ${balance:,.0f}
                     </h2>
-                    <p style="margin:5px 0 0 0;">{'✅ Superávit' if balance > 0 else '⚠ Déficit'}</p>
+                    <p style="margin:5px 0 0 0;">{'Superávit' if balance > 0 else 'Déficit'}</p>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -634,8 +633,8 @@ try:
     st.caption("© 2025 Equipo B - Sistema de Gestión Financiera")
 
 except FileNotFoundError as e:
-    st.error(f"❌ Error al cargar los datos: {e}")
+    st.error(f"Error al cargar los datos: {e}")
     st.info("Asegúrate de que los archivos CSV estén en la carpeta 'data/'")
 except Exception as e:
-    st.error(f"❌ Error inesperado: {e}")
+    st.error(f"Error inesperado: {e}")
     st.info("Verifica que los archivos CSV tengan el formato correcto")

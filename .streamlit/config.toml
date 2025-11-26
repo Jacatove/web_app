@@ -1,0 +1,12 @@
+[theme]
+backgroundColor="#FFFFFF"
+font="sans serif"
+
+[browser]
+gatherUsageStats = false
+
+[deprecation]
+showPyplotGlobalUse = false
+
+[ui]
+initialSidebarState = "expanded"
