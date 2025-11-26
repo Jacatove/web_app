@@ -23,40 +23,49 @@ def cargar_datos():
     scoring = pd.read_csv('data/scoring_crediticio.csv')
     return clientes, cuentas, historial, scoring
 
-# Función para extraer email del token (mensaje de whoami)
-def extraer_email_del_token(token):
+# Función para extraer UUID del mensaje de whoami
+def extraer_uuid_del_whoami(mensaje_whoami):
     """
-    Extrae el email del token/mensaje que viene del login
+    Extrae el UUID del usuario del mensaje que viene de whoami
     Formato esperado: "Yo soy c4f45cd0-1412-44be-b8b0-658322c5da84 y mi email es mafe@gmail.com"
+    o un JSON con estructura {"id": "uuid", ...}
     """
     import re
-    email_pattern = r'[\w\.-]+@[\w\.-]+\.\w+'
-    match = re.search(email_pattern, token)
+    
+    # Si es un diccionario/JSON, intentar extraer directamente
+    if isinstance(mensaje_whoami, dict):
+        return mensaje_whoami.get('id') or mensaje_whoami.get('user_id') or mensaje_whoami.get('uuid')
+    
+    # Si es un string, buscar patrón UUID
+    # Patrón UUID v4: 8-4-4-4-12 caracteres hexadecimales
+    uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+    match = re.search(uuid_pattern, str(mensaje_whoami))
     return match.group(0) if match else None
 
 llamada_whoiam = AuthService.whoami(st.session_state.token)
 try:
     clientes_df, cuentas_df, historial_df, scoring_df = cargar_datos()
     
-    # Extraer email del token (que contiene el mensaje completo de whoami)
-    email_usuario = extraer_email_del_token(llamada_whoiam)
+    # Extraer UUID del mensaje de whoami
+    id_usuario = extraer_uuid_del_whoami(llamada_whoiam)
     
-    if not email_usuario:
-        st.error("❌ No se pudo extraer el email del token.")
-        st.info("Token recibido: " + llamada_whoiam)
+    if not id_usuario:
+        st.error("❌ No se pudo extraer el ID del usuario del mensaje whoami.")
+        st.info("Respuesta whoami recibida: " + str(llamada_whoiam))
         st.stop()
     
-    # Buscar el cliente por email en el CSV
-    cliente_match = clientes_df[clientes_df['email'] == email_usuario]
+    # Buscar el cliente por UUID directamente en el CSV
+    cliente_match = clientes_df[clientes_df['id_cliente'] == id_usuario]
     
     if len(cliente_match) == 0:
-        st.error(f"❌ No se encontró información financiera para: {email_usuario}")
+        st.error(f"❌ No se encontró información financiera para el usuario ID: {id_usuario}")
         st.info("💡 Contacta a soporte para registrar tus datos financieros.")
         st.stop()
     
     # Obtener datos del cliente
     cliente = cliente_match.iloc[0]
     id_cliente = cliente['id_cliente']
+    email_usuario = cliente['email']
     
     # Determinar membership desde el CSV (es_cliente_premium)
     es_premium = bool(cliente['es_cliente_premium'])
@@ -64,7 +73,7 @@ try:
     
     # Mostrar info de sesión
     st.info(
-        f"Usuario: {email_usuario} | Membresía: {st.session_state.membership}"
+        f"Usuario: {email_usuario} | ID: {id_cliente[:8]}... | Membresía: {st.session_state.membership}"
     )
     
     # Filtrar datos del cliente
