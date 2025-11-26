@@ -94,73 +94,168 @@ try:
     with col3:
         st.metric("Ingresos Mensuales", f"${cliente['ingresos_mensuales']:,.0f}")
     with col4:
-        if scoring_cliente is not None:
+        # Mostrar score solo para usuarios PREMIUM
+        if st.session_state.membership == 'PREMIUM' and scoring_cliente is not None:
             st.metric("Score Crediticio", int(scoring_cliente['puntaje_credito']))
+        elif st.session_state.membership == 'FREE':
+            st.metric("Score Crediticio", "🔒 Premium")
     
     st.divider()
     
     # VISUALIZACIÓN SEGÚN MEMBRESÍA
     if st.session_state.membership == 'FREE':
         # ========== VERSIÓN FREE ==========
-        st.warning("⚠️ Plan FREE - Acceso limitado a 2 cuentas")
-        st.markdown("### 💳 Cuentas de Débito (Limitado)")
+        st.warning("⚠️ Plan FREE - Acceso limitado")
         
-        # Mostrar solo 2 cuentas
+        # Mostrar cuentas limitadas (máximo 2)
+        st.markdown("### 💳 Cuentas de Débito")
         cuentas_limitadas = cuentas_cliente.head(2)
         total_cuentas = len(cuentas_cliente)
         
+        # Calcular saldo total solo de cuentas visibles
+        saldo_visible = cuentas_limitadas['saldo_actual'].sum()
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("💰 Saldo Visible", f"${saldo_visible:,.0f}")
+        with col2:
+            st.metric("📊 Cuentas Visibles", f"{len(cuentas_limitadas)} de {total_cuentas}")
+        
+        st.divider()
+        
+        # Mostrar las 2 cuentas permitidas
         for idx, cuenta in cuentas_limitadas.iterrows():
             with st.container():
-                st.markdown(f"**{cuenta['entidad_financiera']} - {cuenta['tipo_cuenta']}**")
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
                 with col1:
-                    st.write(f"Número: ****{str(cuenta['numero_cuenta'])[-4:]}")
+                    st.markdown(f"**🏦 {cuenta['entidad_financiera']}**")
+                    st.caption(f"_{cuenta['tipo_cuenta']}_")
                 with col2:
-                    st.write(f"Saldo: ${cuenta['saldo_actual']:,.2f}")
+                    st.write(f"**${cuenta['saldo_actual']:,.0f}**")
+                    st.caption("Saldo actual")
                 with col3:
-                    st.write(f"Estado: {cuenta['estado']}")
+                    st.write(f"****{str(cuenta['numero_cuenta'])[-4:]}")
+                    st.caption("Número")
+                with col4:
+                    estado_emoji = "✅" if cuenta['estado'] == "Activa" else "⚠️"
+                    st.write(f"{estado_emoji} {cuenta['estado']}")
                 st.divider()
         
+        # Si tiene más de 2 cuentas, mostrar publicidad
         if total_cuentas > 2:
-            st.info(f"🔒 Tienes {total_cuentas - 2} cuenta(s) adicional(es). Actualiza a PREMIUM para verlas todas.")
+            st.markdown("---")
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        padding: 25px; border-radius: 10px; color: white; text-align: center;">
+                <h2 style="color: white; margin-bottom: 15px;">🔒 Tienes {total_cuentas - 2} cuenta(s) más bloqueada(s)</h2>
+                <p style="font-size: 18px; margin-bottom: 20px;">
+                    Desbloquea todas tus cuentas bancarias con PREMIUM
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("")
         
-        # Movimientos limitados - filtrar por las entidades de las cuentas limitadas
-        st.markdown("### 📊 Últimos Movimientos (Limitado)")
+        st.divider()
+        
+        # Score Crediticio BLOQUEADO para FREE
+        st.markdown("### 🔒 Score Crediticio - Solo PREMIUM")
+        
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.markdown("""
+            <div style="background-color: #f0f0f0; padding: 30px; border-radius: 10px; 
+                        text-align: center; position: relative; filter: blur(3px); opacity: 0.6;">
+                <h1 style="font-size: 72px; margin: 0;">750</h1>
+                <p style="font-size: 24px; margin: 0;">Muy Bueno</p>
+                <p style="margin-top: 20px;">📈 Tendencia: Mejorando</p>
+                <p>🎯 Percentil: Top 15%</p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
+            <div style="position: relative; margin-top: -150px; text-align: center; z-index: 100;">
+                <h2>🔒</h2>
+                <p style="font-weight: bold; font-size: 18px; color: #667eea;">
+                    Contenido Premium Bloqueado
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.warning("**⚠️ Función Bloqueada**")
+            st.markdown("""
+            El **Score Crediticio** está disponible solo para usuarios **PREMIUM**.
+            
+            Con PREMIUM puedes ver:
+            - 📊 Puntaje crediticio actualizado
+            - 📈 Tendencias y predicciones
+            - 💡 Factores de riesgo
+            - 🎯 Recomendaciones personalizadas
+            """)
+        
+        st.divider()
+        
+        # Movimientos limitados
+        st.markdown("### 📊 Últimos Movimientos (Limitado a 5)")
         entidades_limitadas = cuentas_limitadas['entidad_financiera'].tolist()
         movimientos_free = historial_cliente[
             historial_cliente['entidad_financiera'].isin(entidades_limitadas)
-        ].head(3)
+        ].head(5)
         
         if len(movimientos_free) > 0:
             for idx, mov in movimientos_free.iterrows():
                 monto = mov['pago_realizado'] if pd.notna(mov['pago_realizado']) else 0
                 categoria = mov['categoria_gasto'] if pd.notna(mov['categoria_gasto']) else 'Sin categoría'
-                canal = mov['canal_transaccion'] if pd.notna(mov['canal_transaccion']) else 'N/A'
+                color = "🔴" if mov['tipo_operacion'] == 'Debito' else "🟢"
                 
-                with st.expander(f"{str(mov['fecha_registro'])[:10]} - {mov['entidad_financiera']} - ${monto:,.0f}"):
-                    st.write(f"**Tipo:** {mov['tipo_operacion']}")
-                    st.write(f"**Categoría:** {categoria}")
-                    st.write(f"**Canal:** {canal}")
+                with st.expander(f"{color} {str(mov['fecha_registro'])[:10]} - {mov['entidad_financiera']} - ${monto:,.0f}"):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write(f"**Tipo:** {mov['tipo_operacion']}")
+                        st.write(f"**Categoría:** {categoria}")
+                    with col2:
+                        if pd.notna(mov['canal_transaccion']):
+                            st.write(f"**Canal:** {mov['canal_transaccion']}")
+                        if pd.notna(mov['tipo_registro']):
+                            st.write(f"**Registro:** {mov['tipo_registro']}")
         else:
             st.info("No hay movimientos recientes disponibles.")
         
-        st.info("🔒 Acceso limitado a movimientos. Actualiza a PREMIUM para historial completo y análisis avanzado.")
+        st.info("🔒 **Historial limitado.** Actualiza a PREMIUM para ver el historial completo con análisis detallado.")
         
-        # CTA para upgrade
+        # CTA de upgrade mejorado
         st.divider()
-        st.success("### 🌟 Actualiza a PREMIUM")
+        st.markdown("---")
         st.markdown("""
-        **Beneficios del plan PREMIUM:**
-        - ✅ Acceso a todas tus cuentas bancarias
-        - ✅ Historial completo de movimientos
-        - ✅ Análisis de gastos por categoría
-        - ✅ Alertas personalizadas
-        - ✅ Score crediticio detallado
-        - ✅ Recomendaciones de mejora
-        """)
-        if st.button("🚀 Actualizar a PREMIUM", type="primary"):
-            st.balloons()
-            st.success("¡Gracias por tu interés! Contacta a soporte para actualizar.")
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+                    padding: 30px; border-radius: 15px; color: white; text-align: center; margin: 20px 0;">
+            <h1 style="color: white; margin-bottom: 10px;">✨ Desbloquea Todo con PREMIUM ✨</h1>
+            <p style="font-size: 20px; margin-bottom: 25px;">
+                Accede a todas las funciones y maximiza tu control financiero
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("#### 🏦 Todas tus Cuentas")
+            st.write("Visualiza todas tus cuentas bancarias sin límites")
+        
+        with col2:
+            st.markdown("#### 📊 Score Crediticio")
+            st.write("Conoce tu puntaje y recibe recomendaciones personalizadas")
+        
+        with col3:
+            st.markdown("#### 📈 Análisis Completo")
+            st.write("Historial detallado y análisis de gastos por categoría")
+        
+        st.markdown("")
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if st.button("🚀 ACTUALIZAR A PREMIUM AHORA", type="primary", use_container_width=True):
+                st.balloons()
+                st.success("🎉 ¡Gracias por tu interés! Contacta a soporte para actualizar tu plan.")
+                st.info("📧 Email: soporte@dashboard.com | 📞 WhatsApp: +57 300 123 4567")
     
     else:
         # ========== VERSIÓN PREMIUM ==========
