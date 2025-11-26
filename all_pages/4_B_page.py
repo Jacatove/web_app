@@ -28,17 +28,27 @@ def extraer_uuid_del_whoami(mensaje_whoami):
     """
     Extrae el UUID del usuario del mensaje que viene de whoami
     Formato esperado: "Yo soy c4f45cd0-1412-44be-b8b0-658322c5da84 y mi email es mafe@gmail.com"
-    o un JSON con estructura {"id": "uuid", ...}
+    o un JSON con estructura {"id": "uuid", ...} o {"message": "Yo soy uuid..."}
     """
     import re
     
-    # Si es un diccionario/JSON, intentar extraer directamente
-    if isinstance(mensaje_whoami, dict):
-        return mensaje_whoami.get('id') or mensaje_whoami.get('user_id') or mensaje_whoami.get('uuid')
-    
-    # Si es un string, buscar patrón UUID
-    # Patrón UUID v4: 8-4-4-4-12 caracteres hexadecimales
+    # Patrón UUID: 8-4-4-4-12 caracteres hexadecimales
     uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+    
+    # Si es un diccionario/JSON
+    if isinstance(mensaje_whoami, dict):
+        # Intentar extraer directamente de claves comunes
+        uuid_directo = mensaje_whoami.get('id') or mensaje_whoami.get('user_id') or mensaje_whoami.get('uuid')
+        if uuid_directo:
+            return uuid_directo
+        
+        # Si no, buscar en el campo 'message' si existe
+        if 'message' in mensaje_whoami:
+            mensaje_str = mensaje_whoami.get('message')
+            match = re.search(uuid_pattern, str(mensaje_str))
+            return match.group(0) if match else None
+    
+    # Si es un string, buscar patrón UUID directamente
     match = re.search(uuid_pattern, str(mensaje_whoami))
     return match.group(0) if match else None
 
